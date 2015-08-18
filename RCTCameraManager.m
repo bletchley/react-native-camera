@@ -565,18 +565,21 @@ didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL
     for (id barcodeType in [self getBarCodeTypes]) {
       if (metadata.type == barcodeType) {
 
+        // Transform the meta-data coordinates to screen coords
+        AVMetadataMachineReadableCodeObject *transformed = (AVMetadataMachineReadableCodeObject *)[_previewLayer transformedMetadataObjectForMetadataObject:metadata];
+
         [self.bridge.eventDispatcher sendDeviceEventWithName:@"CameraBarCodeRead"
                                                         body:@{
                                                                @"type": metadata.type,
                                                                @"data": metadata.stringValue,
                                                                @"bounds": @{
                                                                    @"origin": @{
-                                                                       @"x": [NSString stringWithFormat:@"%f", metadata.bounds.origin.x],
-                                                                       @"y": [NSString stringWithFormat:@"%f", metadata.bounds.origin.y]
+                                                                       @"x": [NSString stringWithFormat:@"%f", transformed.bounds.origin.x],
+                                                                       @"y": [NSString stringWithFormat:@"%f", transformed.bounds.origin.y]
                                                                        },
                                                                    @"size": @{
-                                                                       @"height": [NSString stringWithFormat:@"%f", metadata.bounds.size.height],
-                                                                       @"width": [NSString stringWithFormat:@"%f", metadata.bounds.size.width],
+                                                                       @"height": [NSString stringWithFormat:@"%f", transformed.bounds.size.height],
+                                                                       @"width": [NSString stringWithFormat:@"%f", transformed.bounds.size.width],
                                                                        }
                                                                    }
                                                                }];
