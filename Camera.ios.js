@@ -108,6 +108,8 @@ var Camera = React.createClass({
         type = this.props.type,
         orientation = this.props.orientation,
         flashMode = this.props.flashMode,
+        torchMode = this.props.torchMode,
+        exposure = this.props.exposure;
 
     var legacyProps = {
       aspect: {
@@ -126,8 +128,6 @@ var Camera = React.createClass({
         Back: 'back'
       }
     };
-        torchMode = this.props.torchMode,
-        exposure = this.props.exposure;
 
     if (typeof aspect === 'string') {
       aspect = constants.Aspect[aspect];
