@@ -51,7 +51,11 @@ var Camera = React.createClass({
     torchMode: PropTypes.oneOfType([
       PropTypes.string,
       PropTypes.number
-    ])
+    ]),
+    exposure: PropTypes.oneOfType([
+      PropTypes.string,
+      PropTypes.number
+    ]),
   },
 
   mixins: [NativeMethodsMixin],
@@ -104,7 +108,6 @@ var Camera = React.createClass({
         type = this.props.type,
         orientation = this.props.orientation,
         flashMode = this.props.flashMode,
-        torchMode = this.props.torchMode;
 
     var legacyProps = {
       aspect: {
@@ -123,6 +126,8 @@ var Camera = React.createClass({
         Back: 'back'
       }
     };
+        torchMode = this.props.torchMode,
+        exposure = this.props.exposure;
 
     if (typeof aspect === 'string') {
       aspect = constants.Aspect[aspect];
@@ -150,7 +155,8 @@ var Camera = React.createClass({
       type: type,
       orientation: orientation,
       flashMode: flashMode,
-      torchMode: torchMode
+      torchMode: torchMode,
+      exposure: exposure,
     });
 
     return <RCTCamera {... nativeProps} />

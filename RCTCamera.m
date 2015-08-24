@@ -59,6 +59,11 @@
   [self.manager changeTorchMode:torchMode];
 }
 
+- (void)setExposure:(float)exposure
+{
+    [self.manager changeExposure:exposure];
+}
+
 - (id)initWithManager:(RCTCameraManager*)manager
 {
   

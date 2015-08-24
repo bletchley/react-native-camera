@@ -24,6 +24,7 @@ RCT_EXPORT_VIEW_PROPERTY(type, NSInteger);
 RCT_EXPORT_VIEW_PROPERTY(orientation, NSInteger);
 RCT_EXPORT_VIEW_PROPERTY(flashMode, NSInteger);
 RCT_EXPORT_VIEW_PROPERTY(torchMode, NSInteger);
+RCT_EXPORT_VIEW_PROPERTY(exposure, float);
 
 - (NSDictionary *)constantsToExport
 {
@@ -236,6 +237,21 @@ RCT_EXPORT_METHOD(changeTorchMode:(NSInteger)torchMode) {
   [device unlockForConfiguration];
 }
 
+RCT_EXPORT_METHOD(changeExposure:(float)exposure) {
+    AVCaptureDevice *captureDevice = [self.videoCaptureDeviceInput device];
+
+    if([captureDevice isExposureModeSupported:AVCaptureExposureModeCustom] && [captureDevice isAutoFocusRangeRestrictionSupported]){
+        if ([captureDevice lockForConfiguration:nil]) {
+            float minISO = captureDevice.activeFormat.minISO;
+            float maxISO = captureDevice.activeFormat.maxISO;
+            float clamppedISO = exposure * (maxISO - minISO) + minISO;
+            [captureDevice setExposureMode:AVCaptureExposureModeCustom];
+            [captureDevice setExposureModeCustomWithDuration:CMTimeMake(1,1) ISO:clamppedISO completionHandler:^(CMTime syncTime) {}];
+            [captureDevice unlockForConfiguration];
+        }
+    }
+}
+
 RCT_EXPORT_METHOD(capture:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback) {
   NSInteger captureMode = [[options valueForKey:@"mode"] intValue];
   NSInteger captureTarget = [[options valueForKey:@"target"] intValue];
@@ -288,6 +304,7 @@ RCT_EXPORT_METHOD(stopCapture) {
     if (captureDevice == nil) {
       return;
     }
+
 
     AVCaptureDeviceInput *captureDeviceInput = [AVCaptureDeviceInput deviceInputWithDevice:captureDevice error:&error];
 
