@@ -136,6 +136,9 @@ RCT_EXPORT_VIEW_PROPERTY(exposure, double);
           self.metadataOutput = metadataOutput;
       }
 
+      AVCaptureOutput *videoOutput = [[AVCaptureVideoDataOutput alloc] init];
+      [self.session addOutput:videoOutput];
+
       __weak RCTCameraManager *weakSelf = self;
       [self setRuntimeErrorHandlingObserver:[NSNotificationCenter.defaultCenter addObserverForName:AVCaptureSessionRuntimeErrorNotification object:self.session queue:nil usingBlock:^(NSNotification *note) {
           RCTCameraManager *strongSelf = weakSelf;
