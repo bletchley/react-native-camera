@@ -24,7 +24,7 @@ RCT_EXPORT_VIEW_PROPERTY(type, NSInteger);
 RCT_EXPORT_VIEW_PROPERTY(orientation, NSInteger);
 RCT_EXPORT_VIEW_PROPERTY(flashMode, NSInteger);
 RCT_EXPORT_VIEW_PROPERTY(torchMode, NSInteger);
-RCT_EXPORT_VIEW_PROPERTY(exposure, float);
+RCT_EXPORT_VIEW_PROPERTY(exposure, double);
 
 - (NSDictionary *)constantsToExport
 {
@@ -237,16 +237,17 @@ RCT_EXPORT_METHOD(changeTorchMode:(NSInteger)torchMode) {
   [device unlockForConfiguration];
 }
 
-RCT_EXPORT_METHOD(changeExposure:(float)exposure) {
+RCT_EXPORT_METHOD(changeExposure:(double)exposure) {
     AVCaptureDevice *captureDevice = [self.videoCaptureDeviceInput device];
 
     if([captureDevice isExposureModeSupported:AVCaptureExposureModeCustom] && [captureDevice isAutoFocusRangeRestrictionSupported]){
         if ([captureDevice lockForConfiguration:nil]) {
-            float minISO = captureDevice.activeFormat.minISO;
-            float maxISO = captureDevice.activeFormat.maxISO;
-            float clamppedISO = exposure * (maxISO - minISO) + minISO;
+            double minISO = captureDevice.activeFormat.minISO;
+            double maxISO = captureDevice.activeFormat.maxISO;
+            double clamppedISO = exposure * (maxISO - minISO) + minISO;
             [captureDevice setExposureMode:AVCaptureExposureModeCustom];
             [captureDevice setExposureModeCustomWithDuration:CMTimeMake(1,1) ISO:clamppedISO completionHandler:^(CMTime syncTime) {}];
+            [captureDevice setExposureModeCustomWithDuration:AVCaptureExposureDurationCurrent ISO:clamppedISO completionHandler:^(CMTime syncTime) {}];
             [captureDevice unlockForConfiguration];
         }
     }

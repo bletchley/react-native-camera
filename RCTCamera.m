@@ -59,7 +59,7 @@
   [self.manager changeTorchMode:torchMode];
 }
 
-- (void)setExposure:(float)exposure
+- (void)setExposure:(double)exposure
 {
     [self.manager changeExposure:exposure];
 }

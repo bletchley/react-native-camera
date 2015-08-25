@@ -211,7 +211,8 @@ var RCTCamera = createReactNativeComponentClass({
     type: true,
     orientation: true,
     flashMode: true,
-    torchMode: true
+    torchMode: true,
+    exposure: true
   }),
   uiViewClassName: 'RCTCamera',
 });
