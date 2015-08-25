@@ -97,6 +97,7 @@ RCT_EXPORT_VIEW_PROPERTY(exposure, double);
 - (id)init {
 
   if ((self = [super init])) {
+    self.settings = [NSMutableDictionary new];
 
     self.session = [AVCaptureSession new];
     self.session.sessionPreset = AVCaptureSessionPresetHigh;
@@ -199,8 +200,43 @@ RCT_EXPORT_METHOD(changeCamera:(NSInteger)camera) {
       [self.session addInput:self.videoCaptureDeviceInput];
     }
 
+    [self applySettings];
     [self.session commitConfiguration];
   });
+}
+
+RCT_EXPORT_METHOD(applySettings) {
+  AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
+
+  if ([device lockForConfiguration:nil]) {
+    id exposureSetting = self.settings[@"exposure"];
+    id torchModeSetting = self.settings[@"torchMode"];
+    id flashModeSetting = self.settings[@"flashMode"];
+
+    if(exposureSetting){
+      double exposure = [exposureSetting doubleValue];
+      double minISO = device.activeFormat.minISO;
+      double maxISO = device.activeFormat.maxISO;
+      double clamppedISO = exposure * (maxISO - minISO) + minISO;
+      [device setExposureMode:AVCaptureExposureModeCustom];
+
+      [device setExposureModeCustomWithDuration:AVCaptureExposureDurationCurrent ISO:clamppedISO completionHandler:^(CMTime syncTime) {}];
+    }
+
+    if (torchModeSetting && [device isTorchAvailable]) {
+      NSInteger torchMode = [torchModeSetting integerValue];
+
+      [device setTorchMode:torchMode];
+    }
+
+    if (flashModeSetting && [device hasFlash])
+    {
+      NSInteger flashMode = [flashModeSetting integerValue];
+      [self setFlashMode:flashMode forDevice:device];
+    }
+
+    [device unlockForConfiguration];
+  }
 }
 
 RCT_EXPORT_METHOD(changeAspect:(NSString *)aspect) {
@@ -208,16 +244,8 @@ RCT_EXPORT_METHOD(changeAspect:(NSString *)aspect) {
 }
 
 RCT_EXPORT_METHOD(changeFlashMode:(NSInteger)flashMode) {
-  AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
-  NSError *error = nil;
-
-  if (![device hasFlash]) return;
-  if (![device lockForConfiguration:&error]) {
-    NSLog(@"%@", error);
-    return;
-  }
-  [self setFlashMode:flashMode forDevice:device];
-  [device unlockForConfiguration];
+  [self.settings setObject:[NSNumber numberWithInteger:flashMode] forKey:@"flashMode"];
+  [self applySettings];
 }
 
 RCT_EXPORT_METHOD(changeOrientation:(NSInteger)orientation) {
@@ -225,32 +253,13 @@ RCT_EXPORT_METHOD(changeOrientation:(NSInteger)orientation) {
 }
 
 RCT_EXPORT_METHOD(changeTorchMode:(NSInteger)torchMode) {
-  AVCaptureDevice *device = [self.videoCaptureDeviceInput device];
-  NSError *error = nil;
-
-  if (![device hasTorch]) return;
-  if (![device lockForConfiguration:&error]) {
-    NSLog(@"%@", error);
-    return;
-  }
-  [device setTorchMode: torchMode];
-  [device unlockForConfiguration];
+  [self.settings setObject:[NSNumber numberWithInteger:torchMode] forKey:@"torchMode"];
+  [self applySettings];
 }
 
 RCT_EXPORT_METHOD(changeExposure:(double)exposure) {
-    AVCaptureDevice *captureDevice = [self.videoCaptureDeviceInput device];
-
-    if([captureDevice isExposureModeSupported:AVCaptureExposureModeCustom] && [captureDevice isAutoFocusRangeRestrictionSupported]){
-        if ([captureDevice lockForConfiguration:nil]) {
-            double minISO = captureDevice.activeFormat.minISO;
-            double maxISO = captureDevice.activeFormat.maxISO;
-            double clamppedISO = exposure * (maxISO - minISO) + minISO;
-            [captureDevice setExposureMode:AVCaptureExposureModeCustom];
-            [captureDevice setExposureModeCustomWithDuration:CMTimeMake(1,1) ISO:clamppedISO completionHandler:^(CMTime syncTime) {}];
-            [captureDevice setExposureModeCustomWithDuration:AVCaptureExposureDurationCurrent ISO:clamppedISO completionHandler:^(CMTime syncTime) {}];
-            [captureDevice unlockForConfiguration];
-        }
-    }
+  [self.settings setObject:[NSNumber numberWithDouble:exposure] forKey:@"exposure"];
+  [self applySettings];
 }
 
 RCT_EXPORT_METHOD(capture:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback) {
@@ -332,7 +341,7 @@ RCT_EXPORT_METHOD(stopCapture) {
       }
       [self.metadataOutput setMetadataObjectTypes:self.metadataOutput.availableMetadataObjectTypes];
     }
-
+    [self applySettings];
     [self.session commitConfiguration];
   });
 }
