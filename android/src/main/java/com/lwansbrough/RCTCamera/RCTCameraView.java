@@ -53,10 +53,8 @@ public class RCTCameraView extends ViewGroup {
   public RCTCameraView(ThemedReactContext context) {
     super(context);
 		mContext = context;
-		mScanner = new BarcodeView(context);
+		mScanner = new BarcodeView(mContext);
 		addView(mScanner);
-		mScanner.resume();
-		mScanner.decodeContinuous(callback);
   }
 
   @Override
@@ -64,6 +62,18 @@ public class RCTCameraView extends ViewGroup {
 		this.mScanner.layout(
 			0, 0, right - left, bottom - top
 		);
+  }
+
+  @Override
+  protected void onAttachedToWindow() {
+		mScanner.resume();
+		mScanner.decodeContinuous(callback);
+  }
+
+  @Override
+  protected void onDetachedFromWindow() {
+		mScanner.pause();
+    mScanner.stopDecoding();
   }
 
   public void setAspect(int aspect) {
@@ -92,61 +102,4 @@ public class RCTCameraView extends ViewGroup {
           //layoutViewFinder();
       //}
   }
-
-  //private boolean setActualDeviceOrientation(Context context) {
-      //int actualDeviceOrientation = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getOrientation();
-      //if (_actualDeviceOrientation != actualDeviceOrientation) {
-          //_actualDeviceOrientation = actualDeviceOrientation;
-          //RCTCamera.getInstance().setActualDeviceOrientation(_actualDeviceOrientation);
-          //return true;
-      //} else {
-          //return false;
-      //}
-  //}
-
-  //private void layoutViewFinder() {
-      //layoutViewFinder(this.getLeft(), this.getTop(), this.getRight(), this.getBottom());
-  //}
-
-  //private void layoutViewFinder(int left, int top, int right, int bottom) {
-      //if (null == _viewFinder) {
-          //return;
-      //}
-      //float width = right - left;
-      //float height = bottom - top;
-      //int viewfinderWidth;
-      //int viewfinderHeight;
-      //double ratio;
-      //switch (this._aspect) {
-          //case RCTCameraModule.RCT_CAMERA_ASPECT_FIT:
-              //ratio = this._viewFinder.getRatio();
-              //if (ratio * height > width) {
-                  //viewfinderHeight = (int) (width / ratio);
-                  //viewfinderWidth = (int) width;
-              //} else {
-                  //viewfinderWidth = (int) (ratio * height);
-                  //viewfinderHeight = (int) height;
-              //}
-              //break;
-          //case RCTCameraModule.RCT_CAMERA_ASPECT_FILL:
-              //ratio = this._viewFinder.getRatio();
-              //if (ratio * height < width) {
-                  //viewfinderHeight = (int) (width / ratio);
-                  //viewfinderWidth = (int) width;
-              //} else {
-                  //viewfinderWidth = (int) (ratio * height);
-                  //viewfinderHeight = (int) height;
-              //}
-              //break;
-          //default:
-              //viewfinderWidth = (int) width;
-              //viewfinderHeight = (int) height;
-      //}
-
-      //int viewFinderPaddingX = (int) ((width - viewfinderWidth) / 2);
-      //int viewFinderPaddingY = (int) ((height - viewfinderHeight) / 2);
-
-      //this._viewFinder.layout(viewFinderPaddingX, viewFinderPaddingY, viewFinderPaddingX + viewfinderWidth, viewFinderPaddingY + viewfinderHeight);
-      //this.postInvalidate(this.getLeft(), this.getTop(), this.getRight(), this.getBottom());
-  //}
 }
