@@ -83,10 +83,9 @@ public class RCTCameraView extends ViewGroup {
   }
 
   public void setTorchMode(int torchMode) {
-      //this._torchMode = torchMode;
-      //if (this._viewFinder != null) {
-          //this._viewFinder.setTorchMode(torchMode);
-      //}
+    if (this.mScanner != null) {
+      this.mScanner.setTorch(torchMode == 1);
+    }
   }
 
   public void setFlashMode(int flashMode) {
