@@ -24,37 +24,41 @@ import com.facebook.react.bridge.WritableMap;
 import com.facebook.react.uimanager.*;
 
 public class RCTCameraView extends ViewGroup {
-	private ThemedReactContext mContext;
-	private BarcodeView mScanner;
+  private ThemedReactContext mContext;
+  private BarcodeView mScanner;
 
-	private void sendEvent(String eventName,
-												 @Nullable WritableMap params) {
-		mContext
-				.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
-				.emit(eventName, params);
-	}
+  private void sendEvent(String eventName,
+                         @Nullable WritableMap params) {
+    mContext
+        .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class)
+        .emit(eventName, params);
+  }
 
-	private BarcodeCallback callback = new BarcodeCallback() {
-		@Override
-		public void barcodeResult(BarcodeResult result) {
-			if (result.getText() != null) {
-				Log.d("BARCODE", result.getText());
-				WritableMap params = Arguments.createMap();
-				params.putString("code", result.getText());
-				sendEvent("CameraBarCodeRead", params);
-			}
-		}
+  private String lastQRCode = "";
 
-		@Override
-		public void possibleResultPoints(List<ResultPoint> resultPoints) {
-		}
-	};
+  private BarcodeCallback callback = new BarcodeCallback() {
+    @Override
+    public void barcodeResult(final BarcodeResult result) {
+      String qrCode = result.getText();
+      if (qrCode != null) {
+        if(!qrCode.equals(lastQRCode)){
+          final WritableMap params = Arguments.createMap();
+          params.putString("code", qrCode);
+          sendEvent("CameraBarCodeRead", params);
+          lastQRCode = qrCode;
+        }
+      }
+    }
 
+    @Override
+    public void possibleResultPoints(List<ResultPoint> resultPoints) {
+    }
+  };
   public RCTCameraView(ThemedReactContext context) {
     super(context);
-		mContext = context;
-		mScanner = new BarcodeView(mContext);
-		addView(mScanner);
+    mContext = context;
+    mScanner = new BarcodeView(mContext);
+    addView(mScanner);
   }
 
   @Override
@@ -62,17 +66,20 @@ public class RCTCameraView extends ViewGroup {
 		this.mScanner.layout(
 			0, 0, right - left, bottom - top
 		);
+    this.mScanner.layout(
+      0, 0, right - left, bottom - top
+    );
   }
 
   @Override
   protected void onAttachedToWindow() {
-		mScanner.resume();
-		mScanner.decodeContinuous(callback);
+    mScanner.resume();
+    mScanner.decodeContinuous(callback);
   }
 
   @Override
   protected void onDetachedFromWindow() {
-		mScanner.pause();
+    mScanner.pause();
     mScanner.stopDecoding();
   }
 
