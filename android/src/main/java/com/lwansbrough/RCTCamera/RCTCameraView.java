@@ -14,6 +14,7 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.util.Log;
 import android.support.annotation.Nullable;
+import android.os.PowerManager;
 
 import com.google.zxing.ResultPoint;
 import com.journeyapps.barcodescanner.*;
@@ -54,18 +55,21 @@ public class RCTCameraView extends ViewGroup {
     public void possibleResultPoints(List<ResultPoint> resultPoints) {
     }
   };
+
+  private PowerManager.WakeLock mWakeLock;
+
   public RCTCameraView(ThemedReactContext context) {
     super(context);
     mContext = context;
     mScanner = new BarcodeView(mContext);
     addView(mScanner);
+
+    PowerManager pm = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+    mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "RCTCameraView");
   }
 
   @Override
   protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-		this.mScanner.layout(
-			0, 0, right - left, bottom - top
-		);
     this.mScanner.layout(
       0, 0, right - left, bottom - top
     );
@@ -75,12 +79,15 @@ public class RCTCameraView extends ViewGroup {
   protected void onAttachedToWindow() {
     mScanner.resume();
     mScanner.decodeContinuous(callback);
+    mWakeLock.acquire();
   }
 
   @Override
   protected void onDetachedFromWindow() {
     mScanner.pause();
     mScanner.stopDecoding();
+    if (mWakeLock.isHeld())
+        mWakeLock.release();
   }
 
   public void setAspect(int aspect) {
